@@ -3,38 +3,43 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-global $wpdb;
-$results = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}vwpm_pos ORDER BY created_at DESC LIMIT 50");
+$suppliers = get_posts(array(
+    'post_type' => 'vwpm_supplier',
+    'posts_per_page' => -1,
+    'post_status' => 'any',
+));
+
+if (empty($suppliers)) {
+    global $wpdb;
+    $supplier_rows = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}vwpm_suppliers ORDER BY name ASC");
+}
 ?>
 <div class="wrap vwpm-wrap">
-    <h1>Purchase Orders</h1>
+    <h1>Create Custom PO</h1>
 
     <div class="vwpm-card">
-        <table class="widefat striped">
-            <thead>
-                <tr>
-                    <th>PO Number</th>
-                    <th>Supplier</th>
-                    <th>Status</th>
-                    <th>Total</th>
-                    <th>Date</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php if (!empty($results)) : ?>
-                    <?php foreach ($results as $row) : ?>
-                        <tr>
-                            <td><?php echo esc_html($row->po_number); ?></td>
-                            <td><?php echo esc_html($row->supplier_name ?: 'N/A'); ?></td>
-                            <td><?php echo esc_html($row->status); ?></td>
-                            <td>£<?php echo esc_html(number_format((float) $row->total_cost, 2)); ?></td>
-                            <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime((string) $row->created_at))); ?></td>
-                        </tr>
-                    <?php endforeach; ?>
-                <?php else : ?>
-                    <tr><td colspan="5">No purchase orders found yet.</td></tr>
-                <?php endif; ?>
-            </tbody>
+        <p>Use this page to build a custom purchase order outside the normal product calculator workflow.</p>
+        <table class="form-table">
+            <tr>
+                <th scope="row"><label for="vwpm_custom_po_supplier">Supplier</label></th>
+                <td>
+                    <select id="vwpm_custom_po_supplier" class="regular-text">
+                        <option value="">Select supplier</option>
+                        <?php if (!empty($supplier_rows)) : foreach ($supplier_rows as $supplier) : ?>
+                            <option value="<?php echo esc_attr((string) $supplier->id); ?>"><?php echo esc_html($supplier->name); ?></option>
+                        <?php endforeach; endif; ?>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="vwpm_custom_po_reference">Reference</label></th>
+                <td><input id="vwpm_custom_po_reference" type="text" class="regular-text" placeholder="PO reference" /></td>
+            </tr>
+            <tr>
+                <th scope="row"><label for="vwpm_custom_po_notes">Notes</label></th>
+                <td><textarea id="vwpm_custom_po_notes" class="large-text" rows="5" placeholder="Item details and notes"></textarea></td>
+            </tr>
         </table>
+        <p><button type="button" class="button button-primary">Create PO</button></p>
     </div>
 </div>
