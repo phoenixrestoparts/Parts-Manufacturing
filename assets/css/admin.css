@@ -1,0 +1,15 @@
+<?php
+/**
+ * Custom PO placeholder.
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+?>
+<div class="wrap">
+    <h1>Custom Purchase Order</h1>
+    <div class="vwpm-card">
+        <p>Use this page for manual PO creation workflows.</p>
+    </div>
+</div>
