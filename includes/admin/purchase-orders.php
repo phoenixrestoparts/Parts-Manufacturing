@@ -3,44 +3,42 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$products = get_posts(array(
-    'post_type' => 'product',
-    'post_status' => array('publish', 'draft', 'private'),
-    'posts_per_page' => -1,
-    'orderby' => 'title',
-    'order' => 'ASC',
-));
+global $wpdb;
+$table = $wpdb->prefix . 'vwpm_pos';
+$purchase_orders = $wpdb->get_results("SELECT * FROM {$table} ORDER BY created_at DESC LIMIT 20");
 ?>
 <div class="wrap vwpm-wrap">
-    <h1>Production Calculator</h1>
+    <h1>Purchase Orders</h1>
 
     <div class="vwpm-card">
-        <form id="vwpm-production-form">
-            <table class="form-table">
+        <p>Review saved purchase orders and their latest status before printing or finalising them.</p>
+        <table class="widefat striped">
+            <thead>
                 <tr>
-                    <th scope="row"><label for="vwpm_product_id">Product</label></th>
-                    <td>
-                        <select id="vwpm_product_id" name="product_id" class="regular-text">
-                            <option value="">Select product</option>
-                            <?php foreach ($products as $product) : ?>
-                                <?php $sku = get_post_meta($product->ID, '_sku', true); ?>
-                                <option value="<?php echo esc_attr((string) $product->ID); ?>"><?php echo esc_html($sku ? $sku . ' - ' . $product->post_title : $product->post_title); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </td>
+                    <th>PO Number</th>
+                    <th>Supplier</th>
+                    <th>Status</th>
+                    <th>Total</th>
+                    <th>Created</th>
                 </tr>
-                <tr>
-                    <th scope="row"><label for="vwpm_quantity">Quantity</label></th>
-                    <td><input id="vwpm_quantity" name="quantity" type="number" step="0.01" value="1" class="small-text" /></td>
-                </tr>
-                <tr>
-                    <th scope="row"><label for="vwpm_vat_enabled">Include VAT</label></th>
-                    <td><input type="checkbox" id="vwpm_vat_enabled" name="vat_enabled" checked /></td>
-                </tr>
-            </table>
-            <p><button type="submit" class="button button-primary" id="vwpm-calculate-production">Calculate Requirements</button></p>
-        </form>
+            </thead>
+            <tbody>
+                <?php if (!empty($purchase_orders)) : ?>
+                    <?php foreach ($purchase_orders as $po) : ?>
+                        <tr>
+                            <td><?php echo esc_html($po->po_number); ?></td>
+                            <td><?php echo esc_html($po->supplier_name ?: 'Unassigned'); ?></td>
+                            <td><?php echo esc_html(ucfirst($po->status)); ?></td>
+                            <td><?php echo esc_html('£' . number_format((float) $po->total_cost, 2)); ?></td>
+                            <td><?php echo esc_html(date_i18n(get_option('date_format'), strtotime($po->created_at))); ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
+                    <tr>
+                        <td colspan="5">No purchase orders found.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
-
-    <div id="vwpm-calculator-results" class="vwpm-calculator-results"></div>
 </div>

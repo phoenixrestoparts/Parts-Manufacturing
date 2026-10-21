@@ -1,108 +1,26 @@
-.vwpm-wrap {
-    max-width: 1200px;
-}
+jQuery(document).ready(function ($) {
+    $('#vwpm-production-form').on('submit', function (event) {
+        event.preventDefault();
 
-.vwpm-card {
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
-    margin: 20px 0;
-    padding: 20px;
-}
+        const productId = $('#vwpm_product_id').val();
+        const quantity = $('#vwpm_quantity').val();
+        const includeVat = $('#vwpm_vat_enabled').is(':checked');
 
-.vwpm-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
-    margin-top: 20px;
-}
+        $('#vwpm-calculator-results').html(
+            '<div class="vwpm-card"><p><strong>Production calculator</strong></p><p>Product ID: ' +
+            (productId || 'Not selected') + '</p><p>Quantity: ' +
+            (quantity || '0') + '</p><p>VAT included: ' +
+            (includeVat ? 'Yes' : 'No') + '</p></div>'
+        );
+    });
 
-.vwpm-stat-card {
-    background: #f0f0f1;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    padding: 20px;
-    text-align: center;
-}
+    $('#vwpm-custom-po_supplier, #vwpm_product_id, #vwpm_import_type').each(function () {
+        if (!$(this).hasClass('select2-hidden-accessible')) {
+            $(this).addClass('vwpm-select');
+        }
+    });
 
-.vwpm-stat-label {
-    display: block;
-    color: #646970;
-    margin-bottom: 10px;
-    font-weight: 600;
-}
-
-.vwpm-stat-number {
-    display: block;
-    font-size: 2rem;
-    font-weight: 700;
-}
-
-.vwpm-supplier-box {
-    position: relative;
-}
-
-.vwpm-search-results {
-    position: absolute;
-    width: 100%;
-    max-width: 420px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-    z-index: 999;
-    display: none;
-}
-
-.vwpm-search-results.active {
-    display: block;
-}
-
-.vwpm-search-result-item {
-    padding: 10px 12px;
-    border-bottom: 1px solid #f0f0f1;
-    cursor: pointer;
-}
-
-.vwpm-search-result-item:hover {
-    background: #f6f7f7;
-}
-
-.vwpm-supplier-selected-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: #fff;
-    border: 1px solid #dcdcde;
-    border-radius: 4px;
-    padding: 10px;
-}
-
-.vwpm-results-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 12px;
-}
-
-.vwpm-results-table th,
-.vwpm-results-table td {
-    border: 1px solid #dcdcde;
-    padding: 10px;
-    text-align: left;
-}
-
-.vwpm-results-table th {
-    background: #f6f7f7;
-}
-
-.vwpm-subtotal-row td {
-    font-weight: 600;
-}
-
-.vwpm-grand-total-row td {
-    font-weight: 700;
-}
-
-.vwpm-tool-summary {
-    margin-top: 20px;
-}
+    $('#vwpm-custom-po_notes, #vwpm_supplier_contact').on('focus', function () {
+        $(this).attr('rows', 6);
+    });
+});
