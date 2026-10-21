@@ -6,6 +6,26 @@ if (!defined('ABSPATH')) {
 global $wpdb;
 $table = $wpdb->prefix . 'vwpm_suppliers';
 $suppliers = $wpdb->get_results("SELECT * FROM {$table} ORDER BY name ASC");
+
+if (!empty($_POST['vwpm_supplier_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['vwpm_supplier_nonce'])), 'vwpm_supplier_save') && current_user_can('manage_options')) {
+    $name = sanitize_text_field(wp_unslash($_POST['vwpm_supplier_name'] ?? ''));
+    $email = sanitize_email(wp_unslash($_POST['vwpm_supplier_email'] ?? ''));
+    $contact = sanitize_textarea_field(wp_unslash($_POST['vwpm_supplier_contact'] ?? ''));
+
+    if ($name) {
+        $wpdb->insert(
+            $table,
+            array(
+                'name' => $name,
+                'email' => $email,
+                'contact_details' => $contact,
+            ),
+            array('%s', '%s', '%s')
+        );
+        $suppliers = $wpdb->get_results("SELECT * FROM {$table} ORDER BY name ASC");
+        echo '<div class="notice notice-success"><p>Supplier saved.</p></div>';
+    }
+}
 ?>
 <div class="wrap vwpm-wrap">
     <h1>Suppliers</h1>
@@ -30,24 +50,6 @@ $suppliers = $wpdb->get_results("SELECT * FROM {$table} ORDER BY name ASC");
             <p><button type="submit" class="button button-primary">Save Supplier</button></p>
         </form>
     </div>
-
-    <?php if (!empty($_POST['vwpm_supplier_nonce']) && wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['vwpm_supplier_nonce'])), 'vwpm_supplier_save') && current_user_can('manage_options')) :
-        $name = sanitize_text_field(wp_unslash($_POST['vwpm_supplier_name'] ?? ''));
-        $email = sanitize_email(wp_unslash($_POST['vwpm_supplier_email'] ?? ''));
-        $contact = sanitize_textarea_field(wp_unslash($_POST['vwpm_supplier_contact'] ?? ''));
-        if ($name) {
-            $wpdb->insert(
-                $table,
-                array(
-                    'name' => $name,
-                    'email' => $email,
-                    'contact_details' => $contact,
-                ),
-                array('%s', '%s', '%s')
-            );
-            echo '<div class="notice notice-success"><p>Supplier saved.</p></div>';
-        }
-    endif; ?>
 
     <div class="vwpm-card">
         <h2>Current Suppliers</h2>

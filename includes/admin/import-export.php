@@ -3,16 +3,8 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-$suppliers = get_posts(array(
-    'post_type' => 'vwpm_supplier',
-    'posts_per_page' => -1,
-    'post_status' => 'any',
-));
-
-if (empty($suppliers)) {
-    global $wpdb;
-    $supplier_rows = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}vwpm_suppliers ORDER BY name ASC");
-}
+global $wpdb;
+$supplier_rows = $wpdb->get_results("SELECT * FROM {$wpdb->prefix}vwpm_suppliers ORDER BY name ASC");
 ?>
 <div class="wrap vwpm-wrap">
     <h1>Create Custom PO</h1>
@@ -25,9 +17,9 @@ if (empty($suppliers)) {
                 <td>
                     <select id="vwpm_custom_po_supplier" class="regular-text">
                         <option value="">Select supplier</option>
-                        <?php if (!empty($supplier_rows)) : foreach ($supplier_rows as $supplier) : ?>
+                        <?php foreach ($supplier_rows as $supplier) : ?>
                             <option value="<?php echo esc_attr((string) $supplier->id); ?>"><?php echo esc_html($supplier->name); ?></option>
-                        <?php endforeach; endif; ?>
+                        <?php endforeach; ?>
                     </select>
                 </td>
             </tr>

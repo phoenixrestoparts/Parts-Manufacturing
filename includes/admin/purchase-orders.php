@@ -44,39 +44,3 @@ $products = get_posts(array(
 
     <div id="vwpm-calculator-results" class="vwpm-calculator-results"></div>
 </div>
-
-<script>
-jQuery(function($){
-    $('#vwpm-production-form').on('submit', function(e){
-        e.preventDefault();
-        var productId = $('#vwpm_product_id').val();
-        if (!productId) {
-            $('#vwpm-calculator-results').html('<div class="notice notice-warning"><p>Please select a product.</p></div>');
-            return;
-        }
-
-        $.ajax({
-            url: ajaxurl,
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                action: 'vwpm_calculate_production',
-                nonce: vwpmAdmin.nonce,
-                product_id: productId,
-                quantity: $('#vwpm_quantity').val(),
-                vat_enabled: $('#vwpm_vat_enabled').is(':checked') ? 1 : 0,
-            },
-            success: function(response){
-                if (response && response.success) {
-                    $('#vwpm-calculator-results').html(response.data.html);
-                } else {
-                    $('#vwpm-calculator-results').html('<div class="notice notice-error"><p>' + (response.data.message || 'Calculation failed.') + '</p></div>');
-                }
-            },
-            error: function(){
-                $('#vwpm-calculator-results').html('<div class="notice notice-error"><p>Unable to calculate requirements.</p></div>');
-            }
-        });
-    });
-});
-</script>
