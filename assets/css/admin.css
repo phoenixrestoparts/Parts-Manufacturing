@@ -1,15 +1,21 @@
 <?php
-/**
- * Custom PO placeholder.
- */
-
 if (!defined('ABSPATH')) {
     exit;
 }
 ?>
-<div class="wrap">
-    <h1>Custom Purchase Order</h1>
+<div class="wrap vwpm-wrap">
+    <h1>Import / Export</h1>
+
     <div class="vwpm-card">
-        <p>Use this page for manual PO creation workflows.</p>
+        <h2>Export</h2>
+        <p>Export suppliers, components, and BOM data as CSV.</p>
+        <p><button type="button" class="button button-primary">Export CSV</button></p>
+    </div>
+
+    <div class="vwpm-card">
+        <h2>Import</h2>
+        <p>Upload a CSV file to import new supplier or component data.</p>
+        <input type="file" class="regular-text" />
+        <p><button type="button" class="button">Import CSV</button></p>
     </div>
 </div>

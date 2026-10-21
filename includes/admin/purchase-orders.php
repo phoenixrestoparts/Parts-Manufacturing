@@ -1,8 +1,4 @@
 <?php
-/**
- * Production calculator page.
- */
-
 if (!defined('ABSPATH')) {
     exit;
 }
@@ -15,7 +11,7 @@ $products = get_posts(array(
     'order' => 'ASC',
 ));
 ?>
-<div class="wrap">
+<div class="wrap vwpm-wrap">
     <h1>Production Calculator</h1>
 
     <div class="vwpm-card">
@@ -28,18 +24,18 @@ $products = get_posts(array(
                             <option value="">Select product</option>
                             <?php foreach ($products as $product) : ?>
                                 <?php $sku = get_post_meta($product->ID, '_sku', true); ?>
-                                <option value="<?php echo esc_attr($product->ID); ?>"><?php echo esc_html($sku ? $sku . ' - ' . $product->post_title : $product->post_title); ?></option>
+                                <option value="<?php echo esc_attr((string) $product->ID); ?>"><?php echo esc_html($sku ? $sku . ' - ' . $product->post_title : $product->post_title); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="vwpm_quantity">Quantity</label></th>
-                    <td><input id="vwpm_quantity" name="quantity" type="number" step="0.01" value="1" class="small-text"></td>
+                    <td><input id="vwpm_quantity" name="quantity" type="number" step="0.01" value="1" class="small-text" /></td>
                 </tr>
                 <tr>
                     <th scope="row"><label for="vwpm_vat_enabled">Include VAT</label></th>
-                    <td><input type="checkbox" id="vwpm_vat_enabled" name="vat_enabled" checked></td>
+                    <td><input type="checkbox" id="vwpm_vat_enabled" name="vat_enabled" checked /></td>
                 </tr>
             </table>
             <p><button type="submit" class="button button-primary" id="vwpm-calculate-production">Calculate Requirements</button></p>
@@ -48,3 +44,39 @@ $products = get_posts(array(
 
     <div id="vwpm-calculator-results" class="vwpm-calculator-results"></div>
 </div>
+
+<script>
+jQuery(function($){
+    $('#vwpm-production-form').on('submit', function(e){
+        e.preventDefault();
+        var productId = $('#vwpm_product_id').val();
+        if (!productId) {
+            $('#vwpm-calculator-results').html('<div class="notice notice-warning"><p>Please select a product.</p></div>');
+            return;
+        }
+
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                action: 'vwpm_calculate_production',
+                nonce: vwpmAdmin.nonce,
+                product_id: productId,
+                quantity: $('#vwpm_quantity').val(),
+                vat_enabled: $('#vwpm_vat_enabled').is(':checked') ? 1 : 0,
+            },
+            success: function(response){
+                if (response && response.success) {
+                    $('#vwpm-calculator-results').html(response.data.html);
+                } else {
+                    $('#vwpm-calculator-results').html('<div class="notice notice-error"><p>' + (response.data.message || 'Calculation failed.') + '</p></div>');
+                }
+            },
+            error: function(){
+                $('#vwpm-calculator-results').html('<div class="notice notice-error"><p>Unable to calculate requirements.</p></div>');
+            }
+        });
+    });
+});
+</script>
