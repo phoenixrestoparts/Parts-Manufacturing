@@ -18,6 +18,7 @@ define('VWPM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 require_once VWPM_PLUGIN_DIR . 'includes/ajax-handlers.php';
 require_once VWPM_PLUGIN_DIR . 'includes/form-handlers.php';
+require_once VWPM_PLUGIN_DIR . 'includes/production-handlers.php';
 
 class VW_Parts_Manager {
     
@@ -1134,13 +1135,20 @@ function vwpm_admin_columns_css() {
 
 add_action('admin_init', 'vwpm_handle_print_po');
 function vwpm_handle_print_po() {
-    if (!isset($_GET['vwpm_print_po']) || !current_user_can('manage_woocommerce')) {
+    if ((!isset($_GET['vwpm_print_po']) && !isset($_GET['vwpm_print_po_id'])) || !current_user_can('manage_woocommerce')) {
         return;
     }
 
-    $po_data = get_transient('vwpm_po_' . get_current_user_id());
-    if (!$po_data || !is_array($po_data)) {
-        wp_die('PO data expired or invalid. Please generate the PO again.');
+    if (isset($_GET['vwpm_print_po_id'])) {
+        $po_data = vwpm_get_po_print_data(absint($_GET['vwpm_print_po_id']));
+        if (!$po_data) {
+            wp_die('Purchase order not found.');
+        }
+    } else {
+        $po_data = get_transient('vwpm_po_' . get_current_user_id());
+        if (!$po_data || !is_array($po_data)) {
+            wp_die('PO data expired or invalid. Please generate the PO again.');
+        }
     }
 
     $product_name = '';
@@ -1173,6 +1181,7 @@ function vwpm_handle_print_po() {
     $supplier_name = $po_data['supplier_name'] ?? '';
     $supplier_email = $po_data['supplier_email'] ?? '';
     $po_number = $po_data['po_number'] ?? 'DRAFT-' . date('YmdHis');
+    $po_date = !empty($po_data['created_at']) ? date('d/m/Y H:i', strtotime($po_data['created_at'])) : date('d/m/Y H:i');
 
     header('Content-Type: text/html; charset=utf-8');
     ?>
@@ -1237,7 +1246,7 @@ function vwpm_handle_print_po() {
     <div class="po-title">
         <h1>PURCHASE ORDER</h1>
         <strong>PO Number:</strong> <?php echo esc_html($po_number); ?><br>
-        <strong>PO Date:</strong> <?php echo date('d/m/Y H:i'); ?><br>
+        <strong>PO Date:</strong> <?php echo esc_html($po_date); ?><br>
         <?php if ($product_name): ?>
             <strong>Product(s):</strong> <?php echo esc_html($product_name); ?><br>
         <?php endif; ?>
@@ -1324,3 +1333,4 @@ function vwpm_handle_print_po() {
 <?php
     exit;
 }
+

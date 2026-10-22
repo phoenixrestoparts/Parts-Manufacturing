@@ -39,3 +39,4 @@ $supplier_count  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}vwp
         <p>Build BOMs, assign required tools, track suppliers, and calculate production requirements for your manufacturing workflow.</p>
     </div>
 </div>
+

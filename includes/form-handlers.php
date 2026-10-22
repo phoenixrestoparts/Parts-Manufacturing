@@ -163,3 +163,88 @@ function vwpm_handle_custom_po_create() {
     wp_safe_redirect(add_query_arg('vwpm_po_created', rawurlencode($po_number), $redirect));
     exit;
 }
+
+add_action('admin_init', 'vwpm_handle_po_update');
+
+/**
+ * Saves edits to a purchase order, or saves and marks it as sent (which locks it).
+ */
+function vwpm_handle_po_update() {
+    if (empty($_POST['vwpm_po_action']) || !in_array($_POST['vwpm_po_action'], array('save', 'send'), true)) {
+        return;
+    }
+
+    $action = $_POST['vwpm_po_action'];
+    $po_id  = isset($_POST['vwpm_po_id']) ? absint($_POST['vwpm_po_id']) : 0;
+    $list   = admin_url('admin.php?page=vwpm-purchase-orders');
+    $edit   = add_query_arg('po_id', $po_id, $list);
+
+    $nonce = isset($_POST['vwpm_po_update_nonce']) ? sanitize_text_field(wp_unslash($_POST['vwpm_po_update_nonce'])) : '';
+    if (!$po_id || !current_user_can('manage_options') || !wp_verify_nonce($nonce, 'vwpm_update_po_' . $po_id)) {
+        wp_safe_redirect(add_query_arg('vwpm_po_msg', 'security', $list));
+        exit;
+    }
+
+    global $wpdb;
+    $table = $wpdb->prefix . 'vwpm_pos';
+
+    $row = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $po_id));
+    if (!$row) {
+        wp_safe_redirect(add_query_arg('vwpm_po_msg', 'notfound', $list));
+        exit;
+    }
+
+    if ((int) $row->is_locked === 1 || $row->status === 'sent') {
+        wp_safe_redirect(add_query_arg('vwpm_po_msg', 'locked', $edit));
+        exit;
+    }
+
+    $supplier_id = isset($_POST['vwpm_po_supplier']) ? absint($_POST['vwpm_po_supplier']) : 0;
+    $supplier = null;
+    if ($supplier_id) {
+        $supplier = $wpdb->get_row($wpdb->prepare("SELECT id, name, email FROM {$wpdb->prefix}vwpm_suppliers WHERE id = %d", $supplier_id));
+        if (!$supplier) {
+            wp_safe_redirect(add_query_arg('vwpm_po_msg', 'supplier', $edit));
+            exit;
+        }
+    }
+
+    $raw_items = (isset($_POST['vwpm_po_items']) && is_array($_POST['vwpm_po_items'])) ? wp_unslash($_POST['vwpm_po_items']) : array();
+    list($items, $total) = vwpm_parse_po_items($raw_items);
+    if (empty($items)) {
+        wp_safe_redirect(add_query_arg('vwpm_po_msg', 'noitems', $edit));
+        exit;
+    }
+
+    if ($action === 'send' && !$supplier) {
+        wp_safe_redirect(add_query_arg('vwpm_po_msg', 'nosupplier', $edit));
+        exit;
+    }
+
+    $data = array(
+        'supplier_id'    => $supplier ? (int) $supplier->id : 0,
+        'supplier_name'  => $supplier ? $supplier->name : '',
+        'supplier_email' => $supplier ? (string) $supplier->email : '',
+        'items'          => wp_json_encode($items),
+        'total_cost'     => $total,
+    );
+    $formats = array('%d', '%s', '%s', '%s', '%f');
+
+    if ($action === 'send') {
+        $data['status']    = 'sent';
+        $data['is_locked'] = 1;
+        $formats[] = '%s';
+        $formats[] = '%d';
+    }
+
+    $updated = $wpdb->update($table, $data, array('id' => $po_id, 'is_locked' => 0), $formats, array('%d', '%d'));
+    if (false === $updated) {
+        set_transient('vwpm_notice_detail_' . get_current_user_id(), (string) $wpdb->last_error, 60);
+        wp_safe_redirect(add_query_arg('vwpm_po_msg', 'error', $edit));
+        exit;
+    }
+
+    wp_safe_redirect(add_query_arg('vwpm_po_msg', ($action === 'send') ? 'sent' : 'saved', $edit));
+    exit;
+}
+
