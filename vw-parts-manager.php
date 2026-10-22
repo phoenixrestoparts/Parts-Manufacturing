@@ -16,6 +16,9 @@ if (!defined('ABSPATH')) {
 define('VWPM_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('VWPM_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+require_once VWPM_PLUGIN_DIR . 'includes/ajax-handlers.php';
+require_once VWPM_PLUGIN_DIR . 'includes/form-handlers.php';
+
 class VW_Parts_Manager {
     
     public function __construct() {
@@ -258,6 +261,9 @@ class VW_Parts_Manager {
             return;
         }
 
+        $js_ver = file_exists(VWPM_PLUGIN_DIR . 'assets/js/admin.js') ? filemtime(VWPM_PLUGIN_DIR . 'assets/js/admin.js') : '1.0.3';
+        $css_ver = file_exists(VWPM_PLUGIN_DIR . 'assets/css/admin.css') ? filemtime(VWPM_PLUGIN_DIR . 'assets/css/admin.css') : '1.0.3';
+
         wp_enqueue_style('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css', array(), '4.1.0');
         wp_enqueue_script('select2', 'https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js', array('jquery'), '4.1.0', true);
 
@@ -265,7 +271,7 @@ class VW_Parts_Manager {
             'vwpm-admin',
             VWPM_PLUGIN_URL . 'assets/js/admin.js',
             array('jquery', 'select2'),
-            '1.0.3',
+            $js_ver,
             true
         );
 
@@ -282,11 +288,11 @@ class VW_Parts_Manager {
             'vwpm-admin',
             VWPM_PLUGIN_URL . 'assets/css/admin.css',
             array(),
-            '1.0.3'
+            $css_ver
         );
 
         if (file_exists(VWPM_PLUGIN_DIR . 'assets/css/admin.css')) {
-            wp_enqueue_style('vwpm-admin', VWPM_PLUGIN_URL . 'assets/css/admin.css', array(), '1.0.3');
+            wp_enqueue_style('vwpm-admin', VWPM_PLUGIN_URL . 'assets/css/admin.css', array(), $css_ver);
         }
     }
     
